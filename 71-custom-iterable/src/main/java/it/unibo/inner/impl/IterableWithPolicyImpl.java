@@ -2,6 +2,7 @@ package it.unibo.inner.impl;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import it.unibo.inner.api.IterableWithPolicy;
 import it.unibo.inner.api.Predicate;
@@ -75,6 +76,11 @@ public class IterableWithPolicyImpl<T> implements IterableWithPolicy<T> {
 
         @Override
         public T next() {
+
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
             T elem;
             elem = array[index++];
 
