@@ -1,11 +1,11 @@
 package it.unibo.functional;
 
-import it.unibo.functional.api.Function;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+
+import it.unibo.functional.api.Function;
 
 /**
  * A special utility class with methods that transform collections using {@link Function}s provided as parameters.
@@ -54,7 +54,17 @@ public final class Transformers {
      * @param <O> output elements type
      */
     public static <I, O> List<O> transform(final Iterable<I> base, final Function<I, O> transformer) {
-        return null;
+
+        return Transformers.<I,O>flattenTransform(base, new Function<I,Collection<? extends O>>() {
+
+            @Override
+            public Collection<? extends O> call(I input) {
+                Collection<O> c = new ArrayList<>();
+                c.add(transformer.call(input));
+                return c;
+            }
+            
+        });
     }
 
     /**
@@ -70,7 +80,27 @@ public final class Transformers {
      * @param <I> type of the collection elements
      */
     public static <I> List<? extends I> flatten(final Iterable<? extends Collection<? extends I>> base) {
-        return null;
+
+        List<I> list = new ArrayList<>();
+
+        for(Iterable<? extends I> e: base){
+
+            list.addAll(Transformers.<I,I>flattenTransform(
+                                                           e,
+                                                           new Function<I,Collection<? extends I>>() {
+
+                                                            @Override
+                                                            public Collection<? extends I> call(I input) {
+                                                                Collection<I> c = new ArrayList<>();
+                                                                c.add(input);
+                                                                return c;
+                                                            }
+                        
+                                                           }
+            ));
+        } 
+
+        return list;
     }
 
     /**
@@ -87,7 +117,21 @@ public final class Transformers {
      * @param <I> elements type
      */
     public static <I> List<I> select(final Iterable<I> base, final Function<I, Boolean> test) {
-        return null;
+
+        return Transformers.flattenTransform(
+                                                base,
+                                                new Function<I,Collection<? extends I>>() {
+
+                                                    @Override
+                                                    public Collection<? extends I> call(I input) {
+                                                        Collection<I> list = new ArrayList<>();
+                                                        if (test.call(input)) {
+                                                            list.add(input);
+                                                        }
+                                                        return list;
+                                                    }
+                                                }
+                                            );
     }
 
     /**
@@ -103,6 +147,14 @@ public final class Transformers {
      * @param <I> elements type
      */
     public static <I> List<I> reject(final Iterable<I> base, final Function<I, Boolean> test) {
-        return null;
+
+        return Transformers.<I>select(base, new Function<I,Boolean>() {
+
+            @Override
+            public Boolean call(I input) {
+                return !test.call(input);
+            }
+            
+        });
     }
 }
